@@ -23,6 +23,11 @@ install_common_tools() {
     sudo apt install -y curl wget git unzip ufw build-essential
 }
 
+install_pm2() {
+    echo "⬇️ Installing PM2..."
+    sudo npm install -g pm2
+}
+
 disable_sleep() {
     echo "🖥️ Disabling sleep on lid close..."
     sudo tee /etc/systemd/logind.conf >/dev/null <<EOL
@@ -158,6 +163,7 @@ echo "10) Open Nginx"
 echo "11) Install Tailscale"
 echo "12) Setup Tailscale Funnel"
 echo "13) Install MongoDB"
+echo "14) Install PM2"
 echo "=================================="
 
 # Support both interactive & automation mode
@@ -182,6 +188,7 @@ for choice in $choices; do
         11) install_tailscale ;;
         12) setup_tailscale_funnel ;;
         13) install_mongodb ;;
+        14) install_pm2 ;;
         *) echo "❌ Invalid option: $choice" ;;
     esac
 done
