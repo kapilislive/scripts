@@ -48,6 +48,7 @@ install_node() {
 install_ollama() {
     echo "⬇️ Installing Ollama..."
     curl -fsSL https://ollama.com/install.sh | sh
+    sleep 4;
     ollama pull gemma3:1b
     ollama serve
 }
@@ -91,6 +92,21 @@ install_jitsi() {
     echo "➡️ Run: sudo /usr/share/jitsi-meet/scripts/install-letsencrypt-cert.sh for SSL"
 }
 
+install_nginx() {
+    echo "⬇️ Installing Nginx..."
+    sudo apt update
+    sudo apt install nginx -y
+    sleep 4;
+    sudo nginx -version
+    sudo systemctl enable nginx
+    sudo service nginx restart
+}
+
+open_nginx() {
+    echo "Opening Nginx..."
+    sudo nano /etc/nginx/sites-available/default
+}
+
 # --- Menu ---
 echo "=================================="
 echo " Ubuntu Setup Script"
@@ -103,6 +119,8 @@ echo "5) Setup Firewall"
 echo "6) Install Jitsi Meet"
 echo "7) Disable sleep on lid close"
 echo "8) Install Ollama"
+echo "9) Install Nginx"
+echo "10) Open Nginx"
 echo "=================================="
 
 # Support both interactive & automation mode
@@ -122,6 +140,8 @@ for choice in $choices; do
         6) install_jitsi ;;
         7) disable_sleep ;;
         8) install_ollama ;;
+        9) install_nginx ;;
+        10) open_nginx ;;
         *) echo "❌ Invalid option: $choice" ;;
     esac
 done
