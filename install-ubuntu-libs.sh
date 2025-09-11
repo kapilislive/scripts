@@ -45,6 +45,13 @@ install_node() {
     npm -v
 }
 
+install_ollama() {
+    echo "⬇️ Installing Ollama..."
+    curl -fsSL https://ollama.com/install.sh | sh
+    ollama pull gemma3:1b
+    ollama serve
+}
+
 install_docker() {
     echo "🐳 Installing Docker..."
     sudo apt install -y ca-certificates gnupg
@@ -95,6 +102,7 @@ echo "4) Install Docker"
 echo "5) Setup Firewall"
 echo "6) Install Jitsi Meet"
 echo "7) Disable sleep on lid close"
+echo "8) Install Ollama"
 echo "=================================="
 
 # Support both interactive & automation mode
@@ -113,6 +121,7 @@ for choice in $choices; do
         5) setup_firewall ;;
         6) install_jitsi ;;
         7) disable_sleep ;;
+        8) install_ollama ;;
         *) echo "❌ Invalid option: $choice" ;;
     esac
 done
