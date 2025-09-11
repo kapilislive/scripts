@@ -98,6 +98,19 @@ setup_firewall() {
     sudo ufw status
 }
 
+install_cockpit() {
+    echo "🖥️ Installing Cockpit (Web Admin UI)..."
+    sudo apt update
+    sudo apt install -y cockpit
+
+    echo "🚀 Enabling Cockpit service..."
+    sudo systemctl enable --now cockpit.socket
+
+    echo "✅ Cockpit installed and running."
+    echo "👉 Access it at: https://$(hostname -I | awk '{print $1}'):9090"
+}
+
+
 install_jitsi() {
     echo "📹 Installing Jitsi Meet..."
     sudo apt install -y apt-transport-https
@@ -164,6 +177,7 @@ echo "11) Install Tailscale"
 echo "12) Setup Tailscale Funnel"
 echo "13) Install MongoDB"
 echo "14) Install PM2"
+echo "15) Install Cockpit"
 echo "=================================="
 
 # Support both interactive & automation mode
@@ -189,6 +203,7 @@ for choice in $choices; do
         12) setup_tailscale_funnel ;;
         13) install_mongodb ;;
         14) install_pm2 ;;
+        15) install_cockpit ;;
         *) echo "❌ Invalid option: $choice" ;;
     esac
 done
