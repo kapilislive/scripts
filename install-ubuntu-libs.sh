@@ -70,6 +70,18 @@ install_docker() {
     echo "👉 Log out and log back in for Docker group changes to apply."
 }
 
+install_mongodb() {
+    echo "⬇️ Installing MongoDB..."
+    sudo apt-get install gnupg curl
+    curl -fsSL https://www.mongodb.org/static/pgp/server-8.0.asc | sudo gpg -o /usr/share/keyrings/mongodb-server-8.0.gpg --dearmor
+    echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-8.0.gpg ] https://repo.mongodb.org/apt/ubuntu noble/mongodb-org/8.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-8.0.list
+    sudo apt-get update
+    sudo apt-get install -y mongodb-org
+    sudo systemctl start mongod
+    sudo systemctl enable mongod
+    sudo systemctl status mongod
+}
+
 setup_firewall() {
     echo "🔥 Setting up UFW firewall..."
     sudo ufw allow OpenSSH
@@ -145,6 +157,7 @@ echo "9) Install Nginx"
 echo "10) Open Nginx"
 echo "11) Install Tailscale"
 echo "12) Setup Tailscale Funnel"
+echo "13) Install MongoDB"
 echo "=================================="
 
 # Support both interactive & automation mode
@@ -168,6 +181,7 @@ for choice in $choices; do
         10) open_nginx ;;
         11) install_tailscale ;;
         12) setup_tailscale_funnel ;;
+        13) install_mongodb ;;
         *) echo "❌ Invalid option: $choice" ;;
     esac
 done
