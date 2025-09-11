@@ -92,6 +92,28 @@ install_jitsi() {
     echo "➡️ Run: sudo /usr/share/jitsi-meet/scripts/install-letsencrypt-cert.sh for SSL"
 }
 
+install_tailscale() {
+    echo "🛜 Installing Tailscale..."
+    curl -fsSL https://tailscale.com/install.sh | sh
+    echo "🚀 Starting Tailscale service..."
+    sudo systemctl enable --now tailscaled
+    echo "🔑 Authenticate with Tailscale..."
+    sudo tailscale up --ssh
+}
+
+setup_tailscale_funnel() {
+    if [ -z "$1" ]; then
+        read -rp "Enter port to expose with Tailscale Funnel (e.g. 80, 3000): " FUNNEL_PORT < /dev/tty
+    else
+        FUNNEL_PORT="$1"
+    fi
+
+    echo "🌍 Enabling Funnel on port $FUNNEL_PORT..."
+    sudo tailscale funnel "$FUNNEL_PORT"
+    echo "✅ Funnel active on port $FUNNEL_PORT"
+    echo "👉 Run 'tailscale funnel status' to check your public URL."
+}
+
 install_nginx() {
     echo "⬇️ Installing Nginx..."
     sudo apt update
@@ -121,6 +143,8 @@ echo "7) Disable sleep on lid close"
 echo "8) Install Ollama"
 echo "9) Install Nginx"
 echo "10) Open Nginx"
+echo "11) Install Tailscale"
+echo "12) Setup Tailscale Funnel"
 echo "=================================="
 
 # Support both interactive & automation mode
@@ -142,6 +166,8 @@ for choice in $choices; do
         8) install_ollama ;;
         9) install_nginx ;;
         10) open_nginx ;;
+        11) install_tailscale ;;
+        12) setup_tailscale_funnel ;;
         *) echo "❌ Invalid option: $choice" ;;
     esac
 done
