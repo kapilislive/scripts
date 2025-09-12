@@ -110,6 +110,26 @@ install_cockpit() {
     echo "👉 Access it at: https://$(hostname -I | awk '{print $1}'):9090"
 }
 
+install_docker() {
+    echo "🐳 Setting Up Docker Repo..."
+    # Add Docker's official GPG key:
+    sudo apt-get update
+    sudo apt-get install ca-certificates curl
+    sudo install -m 0755 -d /etc/apt/keyrings
+    sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+    sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+    # Add the repository to Apt sources:
+    echo \
+      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+      $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | \
+      sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+    sudo apt-get update
+    echo "Installing Docker..."
+    sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+    echo "Docker installed successfully."
+}
+
 
 install_jitsi() {
     echo "📹 Installing Jitsi Meet..."
@@ -178,6 +198,7 @@ echo "12) Setup Tailscale Funnel"
 echo "13) Install MongoDB"
 echo "14) Install PM2"
 echo "15) Install Cockpit"
+echo "16) Install Docker"
 echo "=================================="
 
 # Support both interactive & automation mode
@@ -204,6 +225,7 @@ for choice in $choices; do
         13) install_mongodb ;;
         14) install_pm2 ;;
         15) install_cockpit ;;
+        16) install_docker ;;
         *) echo "❌ Invalid option: $choice" ;;
     esac
 done
