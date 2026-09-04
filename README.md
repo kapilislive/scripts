@@ -18,9 +18,88 @@ It runs [`install-ubuntu-libs.sh`](install-ubuntu-libs.sh) on the target machine
 
 Because [this repo is public](https://github.com/kapilislive/scripts), any GitHub repo can call the workflow. You do not need to fork or copy the script.
 
-1. On the target server, put the matching **public** key in `~/.ssh/authorized_keys`. The SSH user must be able to `sudo` without a password.
-2. In the **caller** repo, add an Actions secret named `SSH_PRIVATE_KEY` with the full private key (including the `BEGIN` / `END` lines).
-3. Add a workflow file, for example `.github/workflows/provision.yml`:
+#### 1. Generate an SSH key pair
+
+On your local machine:
+
+```bash
+ssh-keygen -t ed25519 -C "github-actions" -f ~/.ssh/ubuntu_gha -N ""
+```
+
+`-N ""` means no passphrase (GitHub Actions cannot type one). That creates:
+
+- `~/.ssh/ubuntu_gha` — **private** key (goes in GitHub Secrets)
+- `~/.ssh/ubuntu_gha.pub` — **public** key (goes on the Ubuntu server)
+
+Never put the private key on the server.
+
+#### 2. Put the public key on Ubuntu
+
+If you can already SSH with a password:
+
+```bash
+ssh-copy-id -i ~/.ssh/ubuntu_gha.pub ubuntu@YOUR_SERVER_IP
+```
+
+Or on the server manually:
+
+```bash
+mkdir -p ~/.ssh
+chmod 700 ~/.ssh
+echo "PASTE_PUBLIC_KEY_HERE" >> ~/.ssh/authorized_keys
+chmod 600 ~/.ssh/authorized_keys
+```
+
+Paste the one line from `~/.ssh/ubuntu_gha.pub` (starts with `ssh-ed25519`). Cloud VMs often already have a key from the provider — you can reuse that instead.
+
+#### 3. Confirm login works
+
+```bash
+ssh -i ~/.ssh/ubuntu_gha ubuntu@YOUR_SERVER_IP
+```
+
+You should get a shell with no password prompt.
+
+#### 4. Add the private key as a GitHub secret
+
+```bash
+cat ~/.ssh/ubuntu_gha
+```
+
+Copy everything, including:
+
+```
+-----BEGIN OPENSSH PRIVATE KEY-----
+...
+-----END OPENSSH PRIVATE KEY-----
+```
+
+In the **caller** repo: **Settings → Secrets and variables → Actions → New repository secret**
+
+- Name: `SSH_PRIVATE_KEY`
+- Value: the full private key
+
+Do not commit the private key or paste it into workflow YAML.
+
+#### 5. Enable passwordless sudo
+
+On the server (as a user who already has sudo):
+
+```bash
+sudo visudo
+```
+
+Add a line for your SSH user (example for `ubuntu`):
+
+```
+ubuntu ALL=(ALL) NOPASSWD:ALL
+```
+
+Without this, the workflow hangs on `sudo` because nobody can type a password.
+
+#### 6. Call the workflow from another repo
+
+Add a workflow file, for example `.github/workflows/provision.yml`:
 
 ```yaml
 name: Provision server
