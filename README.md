@@ -106,18 +106,12 @@ name: Provision server
 
 on:
   workflow_dispatch:
-    inputs:
-      ip:
-        description: IP address of the Ubuntu server
-        required: true
-        type: string
 
 jobs:
   provision:
     uses: kapilislive/scripts/.github/workflows/provision-ubuntu.yml@main
-    with:
-      ip: ${{ inputs.ip }}
     secrets:
+      server_ip: ${{ secrets.SERVER_IP }}
       ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}
 ```
 
@@ -131,7 +125,6 @@ uses: kapilislive/scripts/.github/workflows/provision-ubuntu.yml@<commit-sha>
 
 | Input | Required | Default | Description |
 | --- | --- | --- | --- |
-| `ip` | yes | — | Server IP address |
 | `ssh_user` | no | `ubuntu` | SSH username |
 | `ssh_port` | no | `22` | SSH port |
 
@@ -142,10 +135,10 @@ jobs:
   provision:
     uses: kapilislive/scripts/.github/workflows/provision-ubuntu.yml@main
     with:
-      ip: 203.0.113.10
       ssh_user: root
       ssh_port: "22"
     secrets:
+      server_ip: ${{ secrets.SERVER_IP }}
       ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}
 ```
 
@@ -153,12 +146,14 @@ jobs:
 
 | Secret | Required | Description |
 | --- | --- | --- |
+| `server_ip` | yes | IP address of the Ubuntu server |
 | `ssh_private_key` | yes | SSH private key used to log in to the server |
 
-Pass it from the caller repo; do not commit the key.
+Pass them from the caller repo; do not commit the key.
 
 ```yaml
 secrets:
+  server_ip: ${{ secrets.SERVER_IP }}
   ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}
 ```
 

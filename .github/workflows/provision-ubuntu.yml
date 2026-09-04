@@ -7,10 +7,6 @@ name: Provision Ubuntu Server
 on:
   workflow_call:
     inputs:
-      ip:
-        description: IP address of the Ubuntu server
-        required: true
-        type: string
       ssh_user:
         description: SSH username
         required: false
@@ -22,13 +18,16 @@ on:
         type: string
         default: "22"
     secrets:
+      server_ip:
+        description: IP address of the Ubuntu server
+        required: true
       ssh_private_key:
         description: SSH private key used to log in to the server
         required: true
 
 jobs:
   provision:
-    name: Install stack on ${{ inputs.ip }}
+    name: Install stack
     runs-on: ubuntu-latest
     timeout-minutes: 45
     permissions:
@@ -43,7 +42,7 @@ jobs:
       - name: Copy install script to server
         uses: appleboy/scp-action@v1.0.0
         with:
-          host: ${{ inputs.ip }}
+          host: ${{ secrets.server_ip }}
           username: ${{ inputs.ssh_user }}
           key: ${{ secrets.ssh_private_key }}
           port: ${{ inputs.ssh_port }}
@@ -53,7 +52,7 @@ jobs:
       - name: Install Node.js, MongoDB, Nginx, Certbot, Redis, PM2
         uses: appleboy/ssh-action@v1.2.5
         with:
-          host: ${{ inputs.ip }}
+          host: ${{ secrets.server_ip }}
           username: ${{ inputs.ssh_user }}
           key: ${{ secrets.ssh_private_key }}
           port: ${{ inputs.ssh_port }}
