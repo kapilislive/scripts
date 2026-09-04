@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e
 
+# Unattended apt (GitHub Actions / automation)
+export DEBIAN_FRONTEND=noninteractive
+export NEEDRESTART_MODE=a
+
 # ============================
 # Ubuntu Server Setup Script
 # Modular - Choose what to install
@@ -77,14 +81,14 @@ install_docker() {
 
 install_mongodb() {
     echo "⬇️ Installing MongoDB..."
-    sudo apt-get install gnupg curl
+    sudo apt-get install -y gnupg curl
     curl -fsSL https://www.mongodb.org/static/pgp/server-8.0.asc | sudo gpg -o /usr/share/keyrings/mongodb-server-8.0.gpg --dearmor
     echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-8.0.gpg ] https://repo.mongodb.org/apt/ubuntu noble/mongodb-org/8.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-8.0.list
     sudo apt-get update
     sudo apt-get install -y mongodb-org
     sudo systemctl start mongod
     sudo systemctl enable mongod
-    sudo systemctl status mongod
+    sudo systemctl --no-pager --lines=5 status mongod
 }
 
 setup_firewall() {
@@ -169,9 +173,25 @@ install_nginx() {
     sudo apt update
     sudo apt install nginx -y
     sleep 4;
-    sudo nginx -version
+    sudo nginx -v
     sudo systemctl enable nginx
     sudo service nginx restart
+}
+
+install_certbot() {
+    echo "⬇️ Installing Certbot..."
+    sudo apt update
+    sudo apt install -y certbot python3-certbot-nginx
+    certbot --version
+}
+
+install_redis() {
+    echo "⬇️ Installing Redis..."
+    sudo apt update
+    sudo apt install -y redis-server
+    sudo systemctl enable --now redis-server
+    sudo systemctl --no-pager --lines=5 status redis-server
+    redis-cli ping
 }
 
 open_nginx() {
@@ -199,6 +219,8 @@ echo "13) Install MongoDB"
 echo "14) Install PM2"
 echo "15) Install Cockpit"
 echo "16) Install Docker"
+echo "17) Install Certbot"
+echo "18) Install Redis"
 echo "=================================="
 
 # Support both interactive & automation mode
@@ -226,6 +248,8 @@ for choice in $choices; do
         14) install_pm2 ;;
         15) install_cockpit ;;
         16) install_docker ;;
+        17) install_certbot ;;
+        18) install_redis ;;
         *) echo "❌ Invalid option: $choice" ;;
     esac
 done

@@ -1,0 +1,77 @@
+# Reusable workflow: SSH into an Ubuntu server and install
+# Node.js, MongoDB, Nginx, Certbot, Redis, and PM2.
+# Usage: see README.md
+
+name: Provision Ubuntu Server
+
+on:
+  workflow_call:
+    inputs:
+      ip:
+        description: IP address of the Ubuntu server
+        required: true
+        type: string
+      ssh_user:
+        description: SSH username
+        required: false
+        type: string
+        default: ubuntu
+      ssh_port:
+        description: SSH port
+        required: false
+        type: string
+        default: "22"
+    secrets:
+      ssh_private_key:
+        description: SSH private key used to log in to the server
+        required: true
+
+jobs:
+  provision:
+    name: Install stack on ${{ inputs.ip }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout install script
+        uses: actions/checkout@v4
+        with:
+          repository: kapilislive/scripts
+          ref: ${{ github.repository == 'kapilislive/scripts' && github.sha || 'main' }}
+
+      - name: Copy install script to server
+        uses: appleboy/scp-action@v1.0.0
+        with:
+          host: ${{ inputs.ip }}
+          username: ${{ inputs.ssh_user }}
+          key: ${{ secrets.ssh_private_key }}
+          port: ${{ inputs.ssh_port }}
+          source: install-ubuntu-libs.sh
+          target: /tmp
+
+      - name: Install Node.js, MongoDB, Nginx, Certbot, Redis, PM2
+        uses: appleboy/ssh-action@v1.2.5
+        with:
+          host: ${{ inputs.ip }}
+          username: ${{ inputs.ssh_user }}
+          key: ${{ secrets.ssh_private_key }}
+          port: ${{ inputs.ssh_port }}
+          command_timeout: 40m
+          script_stop: true
+          script: |
+            set -euo pipefail
+            export DEBIAN_FRONTEND=noninteractive
+            export NEEDRESTART_MODE=a
+            chmod +x /tmp/install-ubuntu-libs.sh
+            # 1 update, 2 common tools, 3 node, 9 nginx, 13 mongodb, 14 pm2, 17 certbot, 18 redis
+            bash /tmp/install-ubuntu-libs.sh 1 2 3 9 13 14 17 18
+            echo "======== Installed versions ========"
+            node -v
+            npm -v
+            mongod --version | head -n 1
+            nginx -v
+            certbot --version
+            redis-server --version
+            pm2 -v
+            echo "======== Provision complete ========"
